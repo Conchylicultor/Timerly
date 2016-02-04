@@ -1,8 +1,13 @@
 package com.pot.timerly;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.graphics.drawable.ColorDrawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -13,7 +18,12 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     private String[] mDataset;
 
     // Class which correspond to each element of our RecyclerView
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        private static boolean colorInitialized = false;
+        private static int backgroundColor; // Default color
+        private static int selectedColor; // When item selected
+
         // Each data item is just a string in this case
 
         // Should contain:
@@ -23,7 +33,54 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         public TextView mTextView;
         public ViewHolder(View v) {
             super(v);
+            v.setOnClickListener(this);
+
             mTextView = (TextView) v.findViewById(R.id.duration_text);
+
+            if(!colorInitialized) {
+                backgroundColor = ContextCompat.getColor(v.getContext(), R.color.background_material_light);
+                selectedColor = ContextCompat.getColor(v.getContext(), R.color.item_selected);
+                colorInitialized = true;
+            }
+        }
+
+        @Override
+        public void onClick(final View view) {
+            // TODO: Dirty !! (should use a member which store the state)
+            boolean isSelected = ((ColorDrawable)view.getBackground()) != null && ((ColorDrawable)view.getBackground()).getColor() == selectedColor;
+
+            int finalRadius = (int)Math.hypot(view.getWidth()/2, view.getHeight()/2);
+
+            if (isSelected) {
+                // Reverse animation
+                // TODO: clipping issue when animation finished
+                view.setBackgroundColor(backgroundColor);
+                Animator anim = ViewAnimationUtils.createCircularReveal(view,
+                        (int) view.getWidth() / 2,
+                        (int) view.getHeight() / 2,
+                        finalRadius,
+                        0);
+                view.setBackgroundColor(selectedColor);
+
+                // Restore the original background when the animation is done
+                anim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        view.setBackgroundColor(backgroundColor);
+                    }
+                });
+                anim.start();
+            } else {
+                // Revelation
+                Animator anim = ViewAnimationUtils.createCircularReveal(view,
+                        (int) view.getWidth() / 2,
+                        (int) view.getHeight() / 2,
+                        0,
+                        finalRadius);
+                view.setBackgroundColor(selectedColor);
+                anim.start();
+            }
         }
     }
 
