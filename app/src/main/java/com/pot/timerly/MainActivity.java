@@ -3,6 +3,7 @@ package com.pot.timerly;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
 
     private Handler mRecordingHandler;
-    private int mCurrentTime = 0;
+    private int mCurrentTime = 0; // TODO: Use clock system time > more precise (instead of interval increment)
     private final int UPDATE_INTERVAL = 100; // 100ms
     private boolean mIsRecording = false;
     private TextView mRecoringText; // Correspond to the timer text
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
         mRecoringText.setText("Inactive");
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        // TODO: Add animations (elevation change and inc when pressed), + haptic response
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -87,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
                     fab.setImageResource(android.R.drawable.ic_media_pause);
 
                     // Start the recording
-                    mCurrentTime = 0;
                     mRecordingRunable.run();
                 } else {
                     // Invert the fab icon
@@ -95,10 +96,35 @@ public class MainActivity extends AppCompatActivity {
 
                     // Stop the recording
                     mRecordingHandler.removeCallbacks(mRecordingRunable);
-
-                    // Save the recording
                 }
                 mIsRecording = !mIsRecording;
+            }
+
+        });
+
+        fab.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View view) {
+                if(mCurrentTime > 0) // No action if we didn't start the recording
+                {
+                    // Resore state
+                    fab.setImageResource(android.R.drawable.ic_media_play);
+                    mIsRecording = false;
+                    mCurrentTime = 0;
+
+                    // Change GUI
+                    // TODO: Hide gui elem
+                    mRecoringText.setText("Inactive");
+
+                    // Stop the recording
+                    mRecordingHandler.removeCallbacks(mRecordingRunable);
+
+                    // Save the recording
+                    Snackbar.make(view, "Saving data...", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null)
+                            .show();
+                }
+
+                return true; // No other listener called
             }
         });
 
