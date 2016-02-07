@@ -1,21 +1,42 @@
 package com.pot.timerly;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+
+    private Handler mRecordingHandler;
+    private int mCurrentTime = 0;
+    private final int UPDATE_INTERVAL = 100; // 100ms
+    private boolean mIsRecording = false;
+    private TextView mRecoringText; // Correspond to the timer text
+
+    // Runable (executable code run every x ms) which update the timer
+    Runnable mRecordingRunable = new Runnable() {
+        @Override
+        public void run() {
+            // Update the GUI:
+            // TODO: Format as date
+            mCurrentTime += UPDATE_INTERVAL;
+            mRecoringText.setText(Integer.toString(mCurrentTime));
+
+            mRecordingHandler.postDelayed(mRecordingRunable, UPDATE_INTERVAL);
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
                 "Blezffdgdfg",
                 "Test 43"
         };
+
+        // Set up the timer
+        mRecordingHandler = new Handler();
 
         // Configure the recycler view
 
@@ -49,12 +73,32 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        mRecoringText = (TextView) findViewById(R.id.recording_text);
+        mRecoringText.setText("Inactive");
+
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+
+                if(!mIsRecording) {
+                    // Invert the fab icon
+                    // TODO: Add transition icon animation
+                    fab.setImageResource(android.R.drawable.ic_media_pause);
+
+                    // Start the recording
+                    mCurrentTime = 0;
+                    mRecordingRunable.run();
+                } else {
+                    // Invert the fab icon
+                    fab.setImageResource(android.R.drawable.ic_media_play);
+
+                    // Stop the recording
+                    mRecordingHandler.removeCallbacks(mRecordingRunable);
+
+                    // Save the recording
+                }
+                mIsRecording = !mIsRecording;
             }
         });
 

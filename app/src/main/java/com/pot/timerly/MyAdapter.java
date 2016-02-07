@@ -38,6 +38,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             mTextView = (TextView) v.findViewById(R.id.duration_text);
 
             if(!colorInitialized) {
+                // TODO: Use theme color instead of a cst color
                 backgroundColor = ContextCompat.getColor(v.getContext(), R.color.background_material_light);
                 selectedColor = ContextCompat.getColor(v.getContext(), R.color.item_selected);
                 colorInitialized = true;
