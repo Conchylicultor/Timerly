@@ -13,6 +13,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
@@ -47,11 +49,7 @@ public class MainActivity extends AppCompatActivity {
         // Loading dataset (Here ???)
 
         // TODO: Load and use real dataset!
-        String[] myDataset = {
-                "String_1",
-                "Blezffdgdfg",
-                "Test 43"
-        };
+        List<RecordingItem> myDataset = RecordingItem.generateItemList(12);
 
         // Set up the timer
         mRecordingHandler = new Handler();

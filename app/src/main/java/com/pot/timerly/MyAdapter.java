@@ -9,13 +9,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+
+import java.text.SimpleDateFormat;
+import java.util.List;
 
 /**
  * Created by pot on 04/02/16.
  */
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-    private String[] mDataset;
+    private List<RecordingItem> mDataset;
 
     // Class which correspond to each element of our RecyclerView
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -30,12 +34,18 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         // - Date of recording
         // - Duration
 
-        public TextView mTextView;
+        public TextView mDurationText;
+        public TextView mDateText;
+        public Button mDeleteButton;
+
         public ViewHolder(View v) {
             super(v);
             v.setOnClickListener(this);
 
-            mTextView = (TextView) v.findViewById(R.id.duration_text);
+            mDurationText = (TextView) v.findViewById(R.id.duration_text);
+            mDateText = (TextView) v.findViewById(R.id.date_text);
+            mDeleteButton = (Button) v.findViewById(R.id.delete_button);
+            // TODO: mDeleteButton.setOnClickListener(); << PB with the click of the view holder ?!
 
             if(!colorInitialized) {
                 // TODO: Use theme color instead of a cst color
@@ -86,7 +96,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public MyAdapter(String[] myDataset) {
+    public MyAdapter(List<RecordingItem> myDataset) {
         mDataset = myDataset;
     }
 
@@ -108,13 +118,19 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        holder.mTextView.setText(mDataset[position]);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/mm/yyyy - HH:mm"); // TODO: Replace that by LocalDateTime on java 8
+
+        holder.mDurationText.setText(Integer.toString(mDataset.get(position).getDuration()));
+        holder.mDateText.setText(dateFormat.format(mDataset.get(position).getDate()));
+
+        // TODO: Restore also the state (selected or not) >> change background accordingly
 
     }
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return mDataset.length;
+        return mDataset.size();
     }
 }
