@@ -159,7 +159,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/mm/yyyy - HH:mm"); // TODO: Replace that by LocalDateTime on java 8
 
-        holder.mDurationText.setText(Integer.toString(mDataset.get(position).getDuration()));
+        holder.mDurationText.setText(String.valueOf(mDataset.get(position).getDuration()));
         holder.mDateText.setText(dateFormat.format(mDataset.get(position).getDate()));
 
         // TODO: Restore also the state (selected or not) >> change background accordingly

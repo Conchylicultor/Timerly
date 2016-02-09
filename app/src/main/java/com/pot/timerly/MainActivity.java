@@ -17,6 +17,7 @@ import com.support.DividerItemDecoration;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,19 +26,34 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
 
     private Handler mRecordingHandler;
-    private int mCurrentTime = 0; // TODO: Use clock system time > more precise (instead of interval increment)
     private final int UPDATE_INTERVAL = 100; // 100ms
-    private boolean mIsRecording = false;
+    private long mDuration = 0;// Combine the durations
+    private Date mStartDate = null;
+    private Date mEndDate = null;
+
     private TextView mRecoringText; // Correspond to the timer text
+
+    private FloatingActionButton mFab;
 
     // Runable (executable code run every x ms) which update the timer
     Runnable mRecordingRunable = new Runnable() {
         @Override
         public void run() {
             // Update the GUI:
-            // TODO: Format as date
-            mCurrentTime += UPDATE_INTERVAL;
-            mRecoringText.setText(Integer.toString(mCurrentTime));
+            mEndDate   = new Date();// Set end date
+
+            long duration  = mDuration + mEndDate.getTime() - mStartDate.getTime();
+
+            long diffInHours = TimeUnit.MILLISECONDS.toHours(duration);
+            duration -= diffInHours*60*60*1000;
+            long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(duration);
+            duration -= diffInMinutes*60*1000;
+            long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(duration);
+            duration -= diffInSeconds*1000;
+            long diffInMillisecond = TimeUnit.MILLISECONDS.toMillis(duration)/100;
+            // TODO: Improve format (Duration with java 8)
+            String timeStr = diffInHours + "h " + diffInMinutes + "min " + diffInSeconds + "." + diffInMillisecond +"sec";
+            mRecoringText.setText(timeStr);
 
             mRecordingHandler.postDelayed(mRecordingRunable, UPDATE_INTERVAL);
         }
@@ -81,61 +97,65 @@ public class MainActivity extends AppCompatActivity {
         mRecoringText = (TextView) findViewById(R.id.recording_text);
         mRecoringText.setText("Inactive");
 
-        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
         // TODO: Add animations (elevation change and inc when pressed), + haptic response
-        fab.setOnClickListener(new View.OnClickListener() {
+        mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                if(!mIsRecording) {
+                if(mStartDate == null ) { // No recording yet (paused or stoped)
                     // Invert the fab icon
                     // TODO: Add transition icon animation
-                    fab.setImageResource(android.R.drawable.ic_media_pause);
+                    mFab.setImageResource(android.R.drawable.ic_media_pause);
 
                     // Start the recording
+                    mStartDate = new Date();
                     mRecordingRunable.run();
                 } else {
-                    // Invert the fab icon
-                    fab.setImageResource(android.R.drawable.ic_media_play);
-
-                    // Stop the recording
-                    mRecordingHandler.removeCallbacks(mRecordingRunable);
+                    // Pause the recording
+                    pauseRecording();
                 }
-                mIsRecording = !mIsRecording;
             }
 
         });
 
-        fab.setOnLongClickListener(new View.OnLongClickListener() {
+        mFab.setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View view) {
-                if(mCurrentTime > 0) // No action if we didn't start the recording
+                if(mDuration > 0 || mStartDate != null) // No action if we didn't start the recording
                 {
                     // User feedback
                     Snackbar.make(view, "Saving data...", Snackbar.LENGTH_SHORT)
                             .setAction("Action", null)
                             .show();
 
-                    // Resore state
-                    fab.setImageResource(android.R.drawable.ic_media_play);
-                    mIsRecording = false;
-
                     // Change GUI
                     // TODO: Hide gui elem
                     mRecoringText.setText("Inactive");
 
                     // Stop the recording
-                    mRecordingHandler.removeCallbacks(mRecordingRunable);
+                    if(mStartDate != null) {
+                        pauseRecording();
+                    }
 
                     // Add the new recording to the database(and save it)
-                    mAdapter.addItem(new RecordingItem(mCurrentTime, new Date()));
-
-                    mCurrentTime = 0;
+                    mAdapter.addItem(new RecordingItem(mDuration, new Date()));
+                    mDuration = 0;
                 }
 
                 return true; // No other listener called
             }
         });
 
+    }
+
+    private void pauseRecording() {
+        // Invert the fab icon
+        mFab.setImageResource(android.R.drawable.ic_media_play);
+
+        // Pause the recording
+        mRecordingHandler.removeCallbacks(mRecordingRunable);
+        mDuration += mEndDate.getTime() - mStartDate.getTime(); // Buffer time
+        mStartDate = null;
     }
 
     @Override

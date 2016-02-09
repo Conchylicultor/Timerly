@@ -11,7 +11,10 @@
     <TextView
         android:id="@+id/recording_text"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+
+        android:textSize="@dimen/chrono_font_size"
+        android:textAlignment="center" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"

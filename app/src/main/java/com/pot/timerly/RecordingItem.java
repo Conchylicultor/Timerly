@@ -9,10 +9,10 @@ import java.util.Random;
  * Created by pot on 09/02/16.
  */
 public class RecordingItem {
-    private int mDuration; // Duration of the recording // TODO: Use Duration instead of int
+    private long mDuration; // Duration of the recording // TODO: Use Duration instead of int
     private Date mDate; // Date of the recording
 
-    public RecordingItem(int mDuration, Date mDate) {
+    public RecordingItem(long mDuration, Date mDate) {
         this.mDuration = mDuration;
         this.mDate = new Date(mDate.getTime());
     }
@@ -21,7 +21,7 @@ public class RecordingItem {
         this(item.getDuration(), item.getDate());
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return mDuration;
     }
 
