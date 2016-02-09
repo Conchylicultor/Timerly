@@ -14,7 +14,11 @@ public class RecordingItem {
 
     public RecordingItem(int mDuration, Date mDate) {
         this.mDuration = mDuration;
-        this.mDate = mDate;
+        this.mDate = new Date(mDate.getTime());
+    }
+
+    public RecordingItem(RecordingItem item) {
+        this(item.getDuration(), item.getDate());
     }
 
     public int getDuration() {
@@ -30,7 +34,7 @@ public class RecordingItem {
     }
 
     public void setDate(Date date) {
-        this.mDate = date;
+        this.mDate = new Date(date.getTime());
     }
 
     // Temporary function which generate a list of random items

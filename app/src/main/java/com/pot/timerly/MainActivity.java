@@ -21,7 +21,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
+    private MyAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
     private Handler mRecordingHandler;
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                 if(mCurrentTime > 0) // No action if we didn't start the recording
                 {
                     // User feedback
-                    Snackbar.make(view, "Saving data...", Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, "Saving data...", Snackbar.LENGTH_SHORT)
                             .setAction("Action", null)
                             .show();
 
@@ -126,9 +126,8 @@ public class MainActivity extends AppCompatActivity {
                     // Stop the recording
                     mRecordingHandler.removeCallbacks(mRecordingRunable);
 
-                    // Save the recording
-                    myDataset.add(new RecordingItem(mCurrentTime, new Date()));
-                    mAdapter.notifyItemInserted(myDataset.size());
+                    // Add the new recording to the database(and save it)
+                    mAdapter.addItem(new RecordingItem(mCurrentTime, new Date()));
 
                     mCurrentTime = 0;
                 }

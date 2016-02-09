@@ -3,6 +3,7 @@ package com.pot.timerly;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.graphics.drawable.ColorDrawable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -19,14 +20,15 @@ import java.util.List;
  * Created by pot on 04/02/16.
  */
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+    private static boolean colorInitialized = false;
+    private static int backgroundColor; // Default color
+    private static int selectedColor; // When item selected
+
     private List<RecordingItem> mDataset;
 
     // Class which correspond to each element of our RecyclerView
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private static boolean colorInitialized = false;
-        private static int backgroundColor; // Default color
-        private static int selectedColor; // When item selected
 
         // Each data item is just a string in this case
 
@@ -45,6 +47,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             mDurationText = (TextView) v.findViewById(R.id.duration_text);
             mDateText = (TextView) v.findViewById(R.id.date_text);
             mDeleteButton = (Button) v.findViewById(R.id.delete_button);
+            mDeleteButton.setOnClickListener(this);
+
             // TODO: mDeleteButton.setOnClickListener(); << PB with the click of the view holder ?!
 
             if(!colorInitialized) {
@@ -57,42 +61,76 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         @Override
         public void onClick(final View view) {
-            // TODO: Dirty !! (should use a member which store the state)
-            boolean isSelected = ((ColorDrawable)view.getBackground()) != null && ((ColorDrawable)view.getBackground()).getColor() == selectedColor;
+            if (view.getId() == mDeleteButton.getId()) { // Button clicked
 
-            int finalRadius = (int)Math.hypot(view.getWidth()/2, view.getHeight()/2);
+                // Allow the restoration of the object
+                final RecordingItem savedItem = new RecordingItem(mDataset.get(getAdapterPosition())); // Copy the item before removing it
+                final int savedPosition = getAdapterPosition();
 
-            if (isSelected) {
-                // Reverse animation
-                // TODO: clipping issue when animation finished
-                view.setBackgroundColor(backgroundColor);
-                Animator anim = ViewAnimationUtils.createCircularReveal(view,
-                        (int) view.getWidth() / 2,
-                        (int) view.getHeight() / 2,
-                        finalRadius,
-                        0);
-                view.setBackgroundColor(selectedColor);
+                Snackbar.make(view, "Recording deleted", Snackbar.LENGTH_LONG)
+                        .setAction("Undo", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                addItem(savedPosition, savedItem);
+                            }
+                        })
+                        .show();
 
-                // Restore the original background when the animation is done
-                anim.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        view.setBackgroundColor(backgroundColor);
-                    }
-                });
-                anim.start();
-            } else {
-                // Revelation
-                Animator anim = ViewAnimationUtils.createCircularReveal(view,
-                        (int) view.getWidth() / 2,
-                        (int) view.getHeight() / 2,
-                        0,
-                        finalRadius);
-                view.setBackgroundColor(selectedColor);
-                anim.start();
+                // Delete the object from the database
+                removeItem(getAdapterPosition());
+            } else { // Item clicked
+                // TODO: Dirty !! (should use a member which store the state)
+                boolean isSelected = ((ColorDrawable)view.getBackground()) != null && ((ColorDrawable)view.getBackground()).getColor() == selectedColor;
+
+                int finalRadius = (int)Math.hypot(view.getWidth()/2, view.getHeight()/2);
+
+                if (isSelected) {
+                    // Reverse animation
+                    // TODO: clipping issue when animation finished
+                    view.setBackgroundColor(backgroundColor);
+                    Animator anim = ViewAnimationUtils.createCircularReveal(view,
+                            (int) view.getWidth() / 2,
+                            (int) view.getHeight() / 2,
+                            finalRadius,
+                            0);
+                    view.setBackgroundColor(selectedColor);
+
+                    // Restore the original background when the animation is done
+                    anim.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            view.setBackgroundColor(backgroundColor);
+                        }
+                    });
+                    anim.start();
+                } else {
+                    // Revelation
+                    Animator anim = ViewAnimationUtils.createCircularReveal(view,
+                            (int) view.getWidth() / 2,
+                            (int) view.getHeight() / 2,
+                            0,
+                            finalRadius);
+                    view.setBackgroundColor(selectedColor);
+                    anim.start();
+                }
             }
         }
+    }
+
+    public void addItem(int position, RecordingItem newItem) {
+        mDataset.add(position, newItem);
+        notifyItemInserted(position);
+    }
+
+    public void addItem(RecordingItem newItem) {
+        mDataset.add(newItem);
+        notifyItemInserted(mDataset.size());
+    }
+
+    public void removeItem(int position) {
+        mDataset.remove(position);
+        notifyItemRemoved(position);
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
