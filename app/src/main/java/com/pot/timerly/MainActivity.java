@@ -13,6 +13,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.support.DividerItemDecoration;
+
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -49,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         // Loading dataset (Here ???)
 
         // TODO: Load and use real dataset!
-        List<RecordingItem> myDataset = RecordingItem.generateItemList(12);
+        final List<RecordingItem> myDataset = RecordingItem.generateItemList(2);
 
         // Set up the timer
         mRecordingHandler = new Handler();
@@ -58,14 +61,17 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
-        // For improving performance (static size)
-        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setHasFixedSize(true); // For improving performance (static size)
         // Linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         // Specify the adapter
         mAdapter = new MyAdapter(myDataset);
         mRecyclerView.setAdapter(mAdapter);
+
+        RecyclerView.ItemDecoration itemDecoration = new
+                DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST);
+        mRecyclerView.addItemDecoration(itemDecoration);
 
         // Configure other GUI elements
 
@@ -104,10 +110,14 @@ public class MainActivity extends AppCompatActivity {
             public boolean onLongClick(View view) {
                 if(mCurrentTime > 0) // No action if we didn't start the recording
                 {
+                    // User feedback
+                    Snackbar.make(view, "Saving data...", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null)
+                            .show();
+
                     // Resore state
                     fab.setImageResource(android.R.drawable.ic_media_play);
                     mIsRecording = false;
-                    mCurrentTime = 0;
 
                     // Change GUI
                     // TODO: Hide gui elem
@@ -117,9 +127,10 @@ public class MainActivity extends AppCompatActivity {
                     mRecordingHandler.removeCallbacks(mRecordingRunable);
 
                     // Save the recording
-                    Snackbar.make(view, "Saving data...", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null)
-                            .show();
+                    myDataset.add(new RecordingItem(mCurrentTime, new Date()));
+                    mAdapter.notifyItemInserted(myDataset.size());
+
+                    mCurrentTime = 0;
                 }
 
                 return true; // No other listener called
