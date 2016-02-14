@@ -1,6 +1,7 @@
 package com.pot.timerly;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler mRecordingHandler;
     private final int UPDATE_INTERVAL = 100; // 100ms
     private long mDuration = 0;// Combine the durations
+
     private Date mStartDate = null;
     private Date mEndDate = null;
 
@@ -36,8 +39,13 @@ public class MainActivity extends AppCompatActivity {
 
     private FloatingActionButton mFab;
 
+    private SharedPreferences mSettings;
+    private SharedPreferences.Editor mSettingsEditor;
+
     public static final String RECORDING_START = "recording_start";
     public static final String RECORDING_DURATION = "recording_duration";
+
+    public static final String SETTINGS_URL = "settings";
 
     // Runable (executable code run every x ms) which update the timer
     Runnable mRecordingRunable = new Runnable() {
@@ -53,13 +61,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("Timerly", "Activity Creation");
+
         setContentView(R.layout.activity_main);
 
-        // Loading dataset (Here ???)
-
-
-
-        // final List<RecordingItem> myDataset = RecordingItem.generateItemList(2);
+        // Loading dataset (in the adapter)
 
         // Set up the timer
         mRecordingHandler = new Handler();
@@ -102,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                     iconAnimation.start();
 
                     // Start the recording
-                    mStartDate = new Date();
+                    setmStartDate(new Date());
                     mRecordingRunable.run();
                 } else {
                     // Pause the recording
@@ -114,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
         mFab.setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View view) {
-                if (mDuration > 0 || mStartDate != null) { // No action if we didn't start the recording
+                if (getmDuration() > 0 || mStartDate != null) { // No action if we didn't start the recording
                     // User feedback
                     Snackbar.make(view, "Saving data...", Snackbar.LENGTH_SHORT)
                             .setAction("Action", null)
@@ -130,18 +136,23 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     // Add the new recording to the database(and save it)
-                    mAdapter.addItem(new RecordingItem(mDuration, new Date()));
-                    mDuration = 0;
+                    mAdapter.addItem(new RecordingItem(getmDuration(), new Date()));
+                    setmDuration(0);
                 }
 
                 return true; // No other listener called
             }
         });
+
+        // Restore states
+        mSettings = getSharedPreferences(SETTINGS_URL, 0);
+        mSettingsEditor = mSettings.edit();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        Log.d("Timerly", "Activity paused");
 
         // Pause the GUI update (without stoping nor reinitializing the recording)
         mRecordingHandler.removeCallbacks(mRecordingRunable);
@@ -168,6 +179,18 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         // Restart chrono if it was launched
+        mDuration = mSettings.getLong(RECORDING_DURATION, 0);
+        long dateTime = mSettings.getLong(RECORDING_START, -1);
+        Log.d("Timerly", "Read settings" + String.format(" %d, %d", mDuration, dateTime));
+        if (dateTime < 0) {
+            Log.d("Timerly", "Reset recording");
+            mStartDate = null;
+            mDuration = 0; // The last state was a pause state => Reset
+        } else {
+            Log.d("Timerly", "Restore recording");
+            mStartDate = new Date(dateTime);
+            mFab.setImageResource(R.drawable.ic_pause);
+        }
 
         if(mStartDate != null) { // Currently a recording: we refresh the GUI
             mRecordingRunable.run();
@@ -185,8 +208,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Pause the recording
         mRecordingHandler.removeCallbacks(mRecordingRunable);
-        mDuration += mEndDate.getTime() - mStartDate.getTime(); // Buffer time
-        mStartDate = null;
+        setmDuration(mDuration + mEndDate.getTime() - mStartDate.getTime()); // Buffer time
+        setmStartDate(null);
     }
 
     @Override
@@ -228,5 +251,29 @@ public class MainActivity extends AppCompatActivity {
         String timeStr = diffInHours + "h " + diffInMinutes + "min " + diffInSeconds + "." + diffInMillisecond +"sec";
 
         return timeStr;
+    }
+
+    public long getmDuration() {
+        return mDuration;
+    }
+
+    public void setmDuration(long mDuration) {
+        this.mDuration = mDuration;
+        mSettingsEditor.putLong(RECORDING_DURATION, mDuration);
+        mSettingsEditor.commit();
+    }
+
+    public Date getmStartDate() {
+        return mStartDate;
+    }
+
+    public void setmStartDate(Date mStartDate) {
+        this.mStartDate = mStartDate;
+        if(mStartDate == null) {
+            mSettingsEditor.putLong(RECORDING_START, -1);
+        } else {
+            mSettingsEditor.putLong(RECORDING_START, mStartDate.getTime());
+        }
+        mSettingsEditor.commit();
     }
 }

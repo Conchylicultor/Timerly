@@ -1,6 +1,7 @@
 package com.pot.timerly;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -81,7 +82,7 @@ public class RecordingBackground extends Service {
 
         // TODO: Define actions
 
-        /*Intent resultIntent = new Intent(this, MainActivity.class);
+        Intent resultIntent = new Intent(this, MainActivity.class);
         // Warning: Create a new activity!!! Does not restore the old one
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
@@ -90,7 +91,7 @@ public class RecordingBackground extends Service {
                         resultIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
-        nBuilder.setContentIntent(resultPendingIntent);*/
+        mBuilder.setContentIntent(resultPendingIntent);
 
         mNotificationManager.notify(ID_NOTIFICATION, mBuilder.build());
 
