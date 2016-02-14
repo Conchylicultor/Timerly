@@ -5,4 +5,5 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <dimen name="chrono_font_size">24sp</dimen>
+    <dimen name="em_font_size">18sp</dimen>
 </resources>

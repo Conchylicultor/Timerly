@@ -201,9 +201,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/mm/yyyy - HH:mm"); // TODO: Replace that by LocalDateTime on java 8
+        long duration = mDataset.get(position).getDuration();
+        long minutes = duration/(60*1000);
+        duration -= minutes*(60*1000);
+        long seconds = duration/(1000);
+        duration -= seconds*1000;
+        long milisecond = duration/100; // Only keep the decimal
+        holder.mDurationText.setText(String.format("Duration: %d:%02d.%d", minutes, seconds, milisecond));
 
-        holder.mDurationText.setText(String.valueOf(mDataset.get(position).getDuration()));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/mm/yyyy - HH:mm"); // TODO: Replace that by LocalDateTime on java 8
         holder.mDateText.setText(dateFormat.format(mDataset.get(position).getDate()));
 
         // TODO: Restore also the state (selected or not) >> change background accordingly
