@@ -1,5 +1,6 @@
 package com.pot.timerly;
 
+import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -105,8 +106,9 @@ public class MainActivity extends AppCompatActivity {
 
                 if(mStartDate == null ) { // No recording yet (paused or stoped)
                     // Invert the fab icon
-                    // TODO: Add transition icon animation
-                    mFab.setImageResource(android.R.drawable.ic_media_pause);
+                    AnimatedVectorDrawable iconAnimation = (AnimatedVectorDrawable) getDrawable(R.drawable.avd_play_to_pause);;
+                    mFab.setImageDrawable(iconAnimation);
+                    iconAnimation.start();
 
                     // Start the recording
                     mStartDate = new Date();
@@ -150,7 +152,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void pauseRecording() {
         // Invert the fab icon
-        mFab.setImageResource(android.R.drawable.ic_media_play);
+        AnimatedVectorDrawable iconAnimation = (AnimatedVectorDrawable) getDrawable(R.drawable.avd_pause_to_play);;
+        mFab.setImageDrawable(iconAnimation);
+        iconAnimation.start();
 
         // Pause the recording
         mRecordingHandler.removeCallbacks(mRecordingRunable);

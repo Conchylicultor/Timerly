@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="48dp"
+        android:height="48dp"
+        android:viewportWidth="48.0"
+        android:viewportHeight="48.0">
+
+    <group>
+        <path
+            android:name="@string/play"
+            android:fillColor="@color/colorIcons"
+            android:pathData="@string/path_play"/>
+    </group>
+</vector>

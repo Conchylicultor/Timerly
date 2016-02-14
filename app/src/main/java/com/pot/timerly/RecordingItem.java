@@ -37,6 +37,12 @@ public class RecordingItem {
         this.mDate = new Date(date.getTime());
     }
 
+    @Override
+    public String toString() {
+        // TODO: Better format ?
+        return mDuration + ", " + mDate.getTime();
+    }
+
     // Temporary function which generate a list of random items
     public static List<RecordingItem> generateItemList(int numItem) {
         List<RecordingItem> recordingItems = new ArrayList<>();
