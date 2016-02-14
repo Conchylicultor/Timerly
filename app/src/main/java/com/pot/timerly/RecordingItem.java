@@ -40,7 +40,7 @@ public class RecordingItem {
     @Override
     public String toString() {
         // TODO: Better format ?
-        return mDuration + ", " + mDate.getTime();
+        return mDuration + " " + mDate.getTime();
     }
 
     // Temporary function which generate a list of random items

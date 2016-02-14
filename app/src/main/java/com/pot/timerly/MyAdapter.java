@@ -2,10 +2,12 @@ package com.pot.timerly;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewAnimationUtils;
@@ -13,8 +15,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by pot on 04/02/16.
@@ -25,6 +34,10 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     private static int selectedColor; // When item selected
 
     private List<RecordingItem> mDataset;
+
+    private Context mContext;
+
+    private final String FILE_SAVE_RECORDING = "recording.csv";
 
     // Class which correspond to each element of our RecyclerView
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -121,20 +134,51 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public void addItem(int position, RecordingItem newItem) {
         mDataset.add(position, newItem);
         notifyItemInserted(position);
+        saveDatabase();
     }
 
     public void addItem(RecordingItem newItem) {
         mDataset.add(newItem);
         notifyItemInserted(mDataset.size());
+        saveDatabase();
     }
 
     public void removeItem(int position) {
         mDataset.remove(position);
         notifyItemRemoved(position);
+        saveDatabase();
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public MyAdapter(List<RecordingItem> myDataset) {
+    public MyAdapter(Context context) {
+        this.mContext = context;
+
+        final List<RecordingItem> myDataset = new ArrayList<>();
+
+        try {
+            FileInputStream file = mContext.openFileInput(FILE_SAVE_RECORDING);
+
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNextLong()) {
+                long duration = scanner.nextLong();
+                Date date = scanner.hasNextLong() ? new Date(scanner.nextLong()) : new Date();
+
+                myDataset.add(new RecordingItem(duration, date));
+            }
+
+            String theString = scanner.hasNext() ? scanner.next() : "";
+
+
+
+            file.close();
+        } catch (FileNotFoundException e) {
+            Log.d("Timerly", "File don't: first launch");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            // FILE NOT CLOSED !!!
+        }
+
         mDataset = myDataset;
     }
 
@@ -170,5 +214,24 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return mDataset.size();
+    }
+
+    public void saveDatabase() {
+
+        FileOutputStream outputStream;
+
+        try {
+            outputStream = mContext.openFileOutput(FILE_SAVE_RECORDING, Context.MODE_PRIVATE);
+
+            for (RecordingItem item : mDataset) {
+                outputStream.write(item.toString().getBytes());
+                outputStream.write('\n');
+            }
+
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            //Snackbar() // TODO
+        }
     }
 }

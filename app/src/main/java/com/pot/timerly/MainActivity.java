@@ -17,7 +17,6 @@ import android.widget.TextView;
 import com.support.DividerItemDecoration;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -68,8 +67,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Loading dataset (Here ???)
 
-        // TODO: Load and use real dataset!
-        final List<RecordingItem> myDataset = RecordingItem.generateItemList(2);
+
+
+        // final List<RecordingItem> myDataset = RecordingItem.generateItemList(2);
 
         // Set up the timer
         mRecordingHandler = new Handler();
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         // Specify the adapter
-        mAdapter = new MyAdapter(myDataset);
+        mAdapter = new MyAdapter(getApplicationContext());
         mRecyclerView.setAdapter(mAdapter);
 
         RecyclerView.ItemDecoration itemDecoration = new

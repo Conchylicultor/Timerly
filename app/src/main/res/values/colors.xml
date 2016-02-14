@@ -5,5 +5,5 @@
     <color name="colorAccent">#FF4081</color>
     <color name="item_selected">#c8255f26</color>
     <color name="colorIcons">#FFFFFFFF</color>
-    <color name="colorIconsDark">#FF000000</color><!--TODO: Gray color-->
+    <color name="colorIconsDark">#FF808080</color><!--TODO: Gray color-->
 </resources>
