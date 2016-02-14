@@ -1,15 +1,12 @@
 package com.pot.timerly;
 
-import android.app.NotificationManager;
-import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -39,10 +36,8 @@ public class MainActivity extends AppCompatActivity {
 
     private FloatingActionButton mFab;
 
-    private NotificationManager mNotificationManager;
-    private AsyncTask<Integer, Integer, Integer> mRecordingTask;
-
-    final int ID_NOTIFICATION = 101; // TODO: Define cst in the ressource files ??
+    public static final String RECORDING_START = "recording_start";
+    public static final String RECORDING_DURATION = "recording_duration";
 
     // Runable (executable code run every x ms) which update the timer
     Runnable mRecordingRunable = new Runnable() {
@@ -99,9 +94,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if(mStartDate == null) { // No recording yet (paused or stoped)
+                if (mStartDate == null) { // No recording yet (paused or stoped)
                     // Invert the fab icon
-                    AnimatedVectorDrawable iconAnimation = (AnimatedVectorDrawable) getDrawable(R.drawable.avd_play_to_pause);;
+                    AnimatedVectorDrawable iconAnimation = (AnimatedVectorDrawable) getDrawable(R.drawable.avd_play_to_pause);
+
                     mFab.setImageDrawable(iconAnimation);
                     iconAnimation.start();
 
@@ -141,10 +137,6 @@ public class MainActivity extends AppCompatActivity {
                 return true; // No other listener called
             }
         });
-
-        mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
     }
 
     @Override
@@ -155,66 +147,19 @@ public class MainActivity extends AppCompatActivity {
         mRecordingHandler.removeCallbacks(mRecordingRunable);
 
         // Launch the notification (if recording)
-
-        // used to update the progress notification
-
         if(mStartDate != null) {
-            // Building the notification
-            final NotificationCompat.Builder nBuilder = new NotificationCompat.Builder(getApplicationContext());
-            nBuilder.setSmallIcon(R.drawable.ic_play);
-            nBuilder.setContentTitle("Recording");
-            nBuilder.setContentText(getCurrentRecordingText());
-            nBuilder.setUsesChronometer(true);
-            // TODO: Define actions
-
-            /*Intent resultIntent = new Intent(this, MainActivity.class);
-            // Warning: Create a new activity!!! Does not restore the old one
-            PendingIntent resultPendingIntent =
-                    PendingIntent.getActivity(
-                            this,
-                            0,
-                            resultIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT
-                    );
-            nBuilder.setContentIntent(resultPendingIntent);*/
-
-            // TODO: Replace by Service !!
-            mRecordingTask = new AsyncTask<Integer, Integer, Integer>() {
-
-                boolean isRunning = true;
-
-                void stopTask() {
-                    isRunning = false;
-                }
-
-                @Override
-                protected void onPreExecute () {
-                    super.onPreExecute();
-                    mNotificationManager.notify(ID_NOTIFICATION, nBuilder.build());
-                }
-
+            Intent intent = new Intent(getApplicationContext(), RecordingBackground.class);
+            intent.putExtra(RECORDING_START, mStartDate.getTime());
+            intent.putExtra(RECORDING_DURATION, mDuration);
+            getApplicationContext().startService(intent);
+            /*AsyncTask recordingTask = new AsyncTask<Integer, Integer, Integer>() {
                 @Override
                 protected Integer doInBackground (Integer... params) {
-                    try {
-
-                        // Update the recording
-                        while(isRunning) {
-                            //Log.d("Timerly", "Still running...");
-                            nBuilder.setContentText(getCurrentRecordingText());
-                            mNotificationManager.notify(ID_NOTIFICATION, nBuilder.build());
-                            Thread.sleep(500);
-                        }
-
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
 
                     return null;
                 }
             };
-
-            // Executes the progress task
-            mRecordingTask.execute();
+            recordingTask.execute();*/
         }
     }
 
@@ -228,12 +173,8 @@ public class MainActivity extends AppCompatActivity {
             mRecordingRunable.run();
         }
 
-        // Remove the notification
-        if(mRecordingTask != null) {
-            mRecordingTask.cancel(true);
-            mRecordingTask = null;
-        }
-        mNotificationManager.cancel(ID_NOTIFICATION); // Do nothing if no notification currently // TODO: Not working
+        // Remove the eventual notification
+        stopService(new Intent(getApplicationContext(), RecordingBackground.class));
     }
 
     private void pauseRecording() {
