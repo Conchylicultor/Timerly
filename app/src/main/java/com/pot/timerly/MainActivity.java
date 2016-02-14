@@ -1,11 +1,15 @@
 package com.pot.timerly;
 
+import android.app.NotificationManager;
+import android.content.Context;
 import android.graphics.drawable.AnimatedVectorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -35,26 +39,17 @@ public class MainActivity extends AppCompatActivity {
 
     private FloatingActionButton mFab;
 
+    private NotificationManager mNotificationManager;
+    private AsyncTask<Integer, Integer, Integer> mRecordingTask;
+
+    final int ID_NOTIFICATION = 101; // TODO: Define cst in the ressource files ??
+
     // Runable (executable code run every x ms) which update the timer
     Runnable mRecordingRunable = new Runnable() {
         @Override
         public void run() {
             // Update the GUI:
-            mEndDate   = new Date();// Set end date
-
-            long duration  = mDuration + mEndDate.getTime() - mStartDate.getTime();
-
-            long diffInHours = TimeUnit.MILLISECONDS.toHours(duration);
-            duration -= diffInHours*60*60*1000;
-            long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(duration);
-            duration -= diffInMinutes*60*1000;
-            long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(duration);
-            duration -= diffInSeconds*1000;
-            long diffInMillisecond = TimeUnit.MILLISECONDS.toMillis(duration)/100;
-            // TODO: Improve format (Duration with java 8)
-            String timeStr = diffInHours + "h " + diffInMinutes + "min " + diffInSeconds + "." + diffInMillisecond +"sec";
-            mRecoringText.setText(timeStr);
-
+            mRecoringText.setText(getCurrentRecordingText());
             mRecordingHandler.postDelayed(mRecordingRunable, UPDATE_INTERVAL);
         }
     };
@@ -104,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if(mStartDate == null ) { // No recording yet (paused or stoped)
+                if(mStartDate == null) { // No recording yet (paused or stoped)
                     // Invert the fab icon
                     AnimatedVectorDrawable iconAnimation = (AnimatedVectorDrawable) getDrawable(R.drawable.avd_play_to_pause);;
                     mFab.setImageDrawable(iconAnimation);
@@ -123,8 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
         mFab.setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View view) {
-                if(mDuration > 0 || mStartDate != null) // No action if we didn't start the recording
-                {
+                if (mDuration > 0 || mStartDate != null) { // No action if we didn't start the recording
                     // User feedback
                     Snackbar.make(view, "Saving data...", Snackbar.LENGTH_SHORT)
                             .setAction("Action", null)
@@ -135,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                     mRecoringText.setText("Inactive");
 
                     // Stop the recording
-                    if(mStartDate != null) {
+                    if (mStartDate != null) {
                         pauseRecording();
                     }
 
@@ -148,6 +142,98 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Pause the GUI update (without stoping nor reinitializing the recording)
+        mRecordingHandler.removeCallbacks(mRecordingRunable);
+
+        // Launch the notification (if recording)
+
+        // used to update the progress notification
+
+        if(mStartDate != null) {
+            // Building the notification
+            final NotificationCompat.Builder nBuilder = new NotificationCompat.Builder(getApplicationContext());
+            nBuilder.setSmallIcon(R.drawable.ic_play);
+            nBuilder.setContentTitle("Recording");
+            nBuilder.setContentText(getCurrentRecordingText());
+            nBuilder.setUsesChronometer(true);
+            // TODO: Define actions
+
+            /*Intent resultIntent = new Intent(this, MainActivity.class);
+            // Warning: Create a new activity!!! Does not restore the old one
+            PendingIntent resultPendingIntent =
+                    PendingIntent.getActivity(
+                            this,
+                            0,
+                            resultIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+            nBuilder.setContentIntent(resultPendingIntent);*/
+
+            // TODO: Replace by Service !!
+            mRecordingTask = new AsyncTask<Integer, Integer, Integer>() {
+
+                boolean isRunning = true;
+
+                void stopTask() {
+                    isRunning = false;
+                }
+
+                @Override
+                protected void onPreExecute () {
+                    super.onPreExecute();
+                    mNotificationManager.notify(ID_NOTIFICATION, nBuilder.build());
+                }
+
+                @Override
+                protected Integer doInBackground (Integer... params) {
+                    try {
+
+                        // Update the recording
+                        while(isRunning) {
+                            //Log.d("Timerly", "Still running...");
+                            nBuilder.setContentText(getCurrentRecordingText());
+                            mNotificationManager.notify(ID_NOTIFICATION, nBuilder.build());
+                            Thread.sleep(500);
+                        }
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    return null;
+                }
+            };
+
+            // Executes the progress task
+            mRecordingTask.execute();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Restart chrono if it was launched
+
+        if(mStartDate != null) { // Currently a recording: we refresh the GUI
+            mRecordingRunable.run();
+        }
+
+        // Remove the notification
+        if(mRecordingTask != null) {
+            mRecordingTask.cancel(true);
+            mRecordingTask = null;
+        }
+        mNotificationManager.cancel(ID_NOTIFICATION); // Do nothing if no notification currently // TODO: Not working
     }
 
     private void pauseRecording() {
@@ -182,5 +268,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public String getCurrentRecordingText() {
+        mEndDate   = new Date();// Set end date
+
+        long duration  = mDuration + mEndDate.getTime() - mStartDate.getTime();
+
+        long diffInHours = TimeUnit.MILLISECONDS.toHours(duration);
+        duration -= diffInHours*60*60*1000;
+        long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(duration);
+        duration -= diffInMinutes*60*1000;
+        long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(duration);
+        duration -= diffInSeconds*1000;
+        long diffInMillisecond = TimeUnit.MILLISECONDS.toMillis(duration)/100;
+
+        // TODO: Improve format (Duration with java 8)
+        String timeStr = diffInHours + "h " + diffInMinutes + "min " + diffInSeconds + "." + diffInMillisecond +"sec";
+
+        return timeStr;
     }
 }
