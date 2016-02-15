@@ -147,6 +147,13 @@ public class MainActivity extends AppCompatActivity {
         // Restore states
         mSettings = getSharedPreferences(SETTINGS_URL, 0);
         mSettingsEditor = mSettings.edit();
+
+        long dateTime = mSettings.getLong(RECORDING_START, -1);
+        Log.d("Timerly", "Read settings" + String.format(" %d, %d", mDuration, dateTime));
+        if (dateTime < 0) {
+            Log.d("Timerly", "Reset recording");
+            setmDuration(0); // The last state was a pause state => Reset
+        }
     }
 
     @Override
@@ -183,9 +190,8 @@ public class MainActivity extends AppCompatActivity {
         long dateTime = mSettings.getLong(RECORDING_START, -1);
         Log.d("Timerly", "Read settings" + String.format(" %d, %d", mDuration, dateTime));
         if (dateTime < 0) {
-            Log.d("Timerly", "Reset recording");
+            Log.d("Timerly", "Restore pause state");
             mStartDate = null;
-            mDuration = 0; // The last state was a pause state => Reset
         } else {
             Log.d("Timerly", "Restore recording");
             mStartDate = new Date(dateTime);

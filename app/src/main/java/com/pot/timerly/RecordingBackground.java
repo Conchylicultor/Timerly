@@ -75,7 +75,7 @@ public class RecordingBackground extends Service {
 
         // Create the notification
         mBuilder = new NotificationCompat.Builder(getApplicationContext());
-        mBuilder.setSmallIcon(R.drawable.ic_play);
+        mBuilder.setSmallIcon(R.drawable.ic_timer);
         mBuilder.setContentTitle("Recording");
         mBuilder.setContentText(getCurrentRecordingText());
         mBuilder.setUsesChronometer(true);
