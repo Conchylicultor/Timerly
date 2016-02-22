@@ -209,7 +209,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         long milisecond = duration/100; // Only keep the decimal
         holder.mDurationText.setText(String.format("Duration: %dmin %02d.%dsec", minutes, seconds, milisecond));
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/mm/yyyy - HH:mm"); // TODO: Replace that by LocalDateTime on java 8
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy - HH:mm"); // TODO: Replace that by LocalDateTime on java 8
         holder.mDateText.setText(dateFormat.format(mDataset.get(position).getDate()));
 
         // TODO: Restore also the state (selected or not) >> change background accordingly
