@@ -9,7 +9,7 @@ import java.util.Random;
  * Created by pot on 09/02/16.
  */
 public class RecordingItem {
-    private long mDuration; // Duration of the recording // TODO: Use Duration instead of int
+    private long mDuration; // Duration of the recording (in ms) // TODO: Use Duration instead of int
     private Date mDate; // Date of the recording
 
     public RecordingItem(long mDuration, Date mDate) {

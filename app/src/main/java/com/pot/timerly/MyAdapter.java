@@ -91,28 +91,16 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                 // Delete the object from the database
                 removeItem(getAdapterPosition());
             } else { // Item clicked
-
-                // Creation of the dialog bar
-                /*Dialog dialog = new Dialog(mContext);
-                dialog.setContentView(R.layout.duration_item_details);
-                dialog.setTitle("Item details");
-                dialog.setCancelable(true);
-                //there are a lot of settings, for dialog, check them all out!
-                dialog.show();*/
-
+                // Open the dialog
                 final AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
-
                 alert.setTitle("Item details");
                 alert.setMessage("Edit duration");
                 alert.setView(R.layout.duration_item_details);
 
-
-                alert.setPositiveButton("Ok",new DialogInterface.OnClickListener()
+                alert.setPositiveButton("Ok",new DialogInterface.OnClickListener() // TODO: Not clean (button created here and initialised later)
                 {
                     public void onClick(DialogInterface dialog,int id)
                     {
-                        //Toast.makeText(getApplicationContext(), "OK Pressed",Toast.LENGTH_LONG).show();
-                        //finish();
                     }
                 });
 
@@ -120,13 +108,11 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                 {
                     public void onClick(DialogInterface dialog,int id)
                     {
-                        //Toast.makeText(getApplicationContext(), "Cancel Pressed",Toast.LENGTH_LONG).show();
-                        //finish();
                     }
                 });
 
                 AlertDialog alertDialog = alert.create();
-                alertDialog.show();
+                alertDialog.show(); // Necessary here to instantiate the widget (otherwise findViewById return null)
 
                 final SeekBar seekBar = (SeekBar) alertDialog.findViewById(R.id.duration_seekbar);
                 final TextView textView = (TextView) alertDialog.findViewById(R.id.text_duration_help);
@@ -146,7 +132,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                     }
                 });
 
-                //alertDialog.show();
+                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        mDataset.get(getAdapterPosition()).setDuration(seekBar.getProgress()*60/2 * 1000);
+
+                        // Update the database
+                        notifyItemChanged(getAdapterPosition());
+                        saveDatabase();
+                    }
+                });
             }
         }
     }
