@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.support.DividerItemDecoration;
 
 import java.util.Date;
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     public static final String RECORDING_DURATION = "recording_duration";
 
     public static final String SETTINGS_URL = "settings";
+
+    private GoogleApiClient mGoogleApiClient;
 
     // Runable (executable code run every x ms) which update the timer
     Runnable mRecordingRunable = new Runnable() {
@@ -79,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         // Specify the adapter
-        mAdapter = new MyAdapter(getApplicationContext());
+        //mAdapter = new MyAdapter(getApplicationContext());
+        mAdapter = new MyAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
 
         RecyclerView.ItemDecoration itemDecoration = new
@@ -154,6 +158,37 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Timerly", "Reset recording");
             setmDuration(0); // The last state was a pause state => Reset
         }
+
+        /*mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Drive.API)
+                .addScope(Drive.SCOPE_FILE)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(Bundle bundle) {
+
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+
+                    }
+                })
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(ConnectionResult connectionResult) {
+                        if (connectionResult.hasResolution()) {
+                            try {
+                                connectionResult.startResolutionForResult(this, RESOLVE_CONNECTION_REQUEST_CODE);
+                            } catch (IntentSender.SendIntentException e) {
+                                // Unable to resolve, message user appropriately
+                            }
+                        } else {
+                            GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), getParent(), 0).show();
+                        }
+                    }
+                })
+                .build();
+        mGoogleApiClient.connect();*/
     }
 
     @Override

@@ -1,18 +1,17 @@
 package com.pot.timerly;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
+import android.app.AlertDialog;
 import android.content.Context;
-import android.graphics.drawable.ColorDrawable;
+import android.content.DialogInterface;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.FileInputStream;
@@ -92,41 +91,62 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                 // Delete the object from the database
                 removeItem(getAdapterPosition());
             } else { // Item clicked
-                // TODO: Dirty !! (should use a member which store the state)
-                boolean isSelected = ((ColorDrawable)view.getBackground()) != null && ((ColorDrawable)view.getBackground()).getColor() == selectedColor;
 
-                int finalRadius = (int)Math.hypot(view.getWidth()/2, view.getHeight()/2);
+                // Creation of the dialog bar
+                /*Dialog dialog = new Dialog(mContext);
+                dialog.setContentView(R.layout.duration_item_details);
+                dialog.setTitle("Item details");
+                dialog.setCancelable(true);
+                //there are a lot of settings, for dialog, check them all out!
+                dialog.show();*/
 
-                if (isSelected) {
-                    // Reverse animation
-                    // TODO: clipping issue when animation finished
-                    view.setBackgroundColor(backgroundColor);
-                    Animator anim = ViewAnimationUtils.createCircularReveal(view,
-                            (int) view.getWidth() / 2,
-                            (int) view.getHeight() / 2,
-                            finalRadius,
-                            0);
-                    view.setBackgroundColor(selectedColor);
+                final AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
 
-                    // Restore the original background when the animation is done
-                    anim.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            view.setBackgroundColor(backgroundColor);
-                        }
-                    });
-                    anim.start();
-                } else {
-                    // Revelation
-                    Animator anim = ViewAnimationUtils.createCircularReveal(view,
-                            (int) view.getWidth() / 2,
-                            (int) view.getHeight() / 2,
-                            0,
-                            finalRadius);
-                    view.setBackgroundColor(selectedColor);
-                    anim.start();
-                }
+                alert.setTitle("Item details");
+                alert.setMessage("Edit duration");
+                alert.setView(R.layout.duration_item_details);
+
+
+                alert.setPositiveButton("Ok",new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog,int id)
+                    {
+                        //Toast.makeText(getApplicationContext(), "OK Pressed",Toast.LENGTH_LONG).show();
+                        //finish();
+                    }
+                });
+
+                alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog,int id)
+                    {
+                        //Toast.makeText(getApplicationContext(), "Cancel Pressed",Toast.LENGTH_LONG).show();
+                        //finish();
+                    }
+                });
+
+                AlertDialog alertDialog = alert.create();
+                alertDialog.show();
+
+                final SeekBar seekBar = (SeekBar) alertDialog.findViewById(R.id.duration_seekbar);
+                final TextView textView = (TextView) alertDialog.findViewById(R.id.text_duration_help);
+
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        textView.setText(String.valueOf(progress/2.0));
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                });
+
+                //alertDialog.show();
             }
         }
     }
